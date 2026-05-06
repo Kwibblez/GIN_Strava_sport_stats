@@ -3,7 +3,7 @@
 /*font*/
 @font-face {
 	font-family: "Frutiger";
-	src: url('/fonts/Frutiger.ttf') format('truetype'),
+	src: url('/static/fonts/Frutiger.ttf') format('truetype'),
 		src: local('Frutiger'), url(/fonts/'Frutiger.woff') format('woff');
 	font-style: normal;
 	font-weight: normal;
@@ -14,7 +14,7 @@
 	font-style: normal;
 	font-weight: normal;
 	src: local('Frutiger Bold'), url('Frutiger_bold.woff') format('woff'),
-		url('/fonts/Frutiger_bold.ttf') format('truetype');
+		url('/static/fonts/Frutiger_bold.ttf') format('truetype');
 }
 
 /*Elements clés*/
