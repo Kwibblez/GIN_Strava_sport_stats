@@ -1,0 +1,150 @@
+body {
+background-color: #212E53;
+padding: 0px;
+border : 0px;
+margin : 60px 120px 0px 120px; /* haut droite bas gauche */
+ 
+}
+
+h1 {
+color: white;
+Font-Family:"Arial";
+Font-size:20pt 
+}
+
+h2{
+Font-Family:"Arial";
+Font-size:20pt;
+text-align: center;
+}
+
+h3{
+Font-Family:"Arial";
+Font-size:16pt;
+text-align:left;
+padding: 0px 0px 0px 20px;
+}
+
+h4{
+Font-Family:"Arial";
+Font-size:14pt;
+text-align:left;
+padding-left: 20px;
+}
+
+h5 {
+font-weight: normal;
+Font-Family:"Arial";
+Font-size: 12pt;
+text-align: center;
+}
+
+p {
+Font-Family:"Arial";
+Font-size:12pt;
+text-align: justify;
+padding-left:20px;
+padding-right:20px;
+padding-bottom:5px
+}
+ 
+.header {
+  display: flex;					/* aligne les textes par défaut */
+  justify-content: space-between; /* même espace entre chaque titre */
+  align-items: center;			  /* alignement vertical */
+  padding:0px 80px 0px 80px;
+  background: #585858;
+  height: 120px;
+  border-radius: 4px;
+  position: relative;
+  z-index:0;
+  margin: 0px 0px 0px 0px
+}
+
+.header a {
+  color: white;               
+  text-decoration: none;      
+  Font-Family:"Arial";
+  Font-size:10pt 
+}
+
+.text {
+  background: #D4D3DC;               
+  padding: 20px 20px 60px 20px;                  
+  min-height: 377px;
+  border-radius: 4px;              
+  font-size: 16px;
+  margin: 0px 0px 0px 0px
+}
+
+.text a {
+  display: block;      /* devient un bloc autonome */
+  text-align: left;    
+  color: black;
+  text-decoration: none;     
+  Font-Family:"Arial";
+  Font-size:8pt;
+}
+
+.text ul {
+	display: block;  
+	text-align: left;
+	Font-Family:"Arial";
+    Font-size:12pt;
+}
+
+.text > li {
+	Font-Family:"Arial";
+    Font-size:12pt;
+}
+
+.text ol {
+  font-size: 12pt;   /* ajuste la taille des numéros */
+  Font-Family:"Arial";
+  display: block;  
+  text-align: left;
+  margin-bottom:20px;
+ 
+}
+
+.table a {
+  font-size: 16pt;   /* ajuste la taille des numéros */
+  Font-Family:"Arial";
+  display: block;  
+  text-align: left;
+  margin-bottom:20px;
+ 
+}
+
+.table ol {
+  font-size: 16pt;   
+  Font-Family:"Arial";
+  display: block;  
+  text-align: left;
+  margin-bottom:20px;
+  padding-left:80px;
+}
+
+.footer {
+  height: 60px;
+  background-color: #585858;
+  border-radius: 4px;
+
+  position: fixed;
+  bottom: 0px;                 
+  left: 120px;                   /* marge verte à gauche */
+  right: 120px;                  /* marge verte à droite */
+
+  display: flex;                
+  justify-content: center;      /* horizontal */
+  align-items: center;          /* vertical */
+  z-index: 1;
+}
+
+.footer a {
+  color: white;               
+  text-decoration: none;      /* enlève le soulignement */
+  Font-Family:"Arial";
+  Font-size:10pt 
+}
+
