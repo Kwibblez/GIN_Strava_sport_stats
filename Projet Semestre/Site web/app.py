@@ -1,6 +1,5 @@
 from flask import Flask, render_template, request, Response, redirect, jsonify
 import psycopg2
-import sqlite3
 import os
 import urllib.parse
 from flask_cors import CORS
@@ -22,42 +21,88 @@ except:
 app = Flask(__name__)
 CORS(app)
 
-STRAVA_CLIENT_ID = os.environ.get('STRAVA_CLIENT_ID')
-STRAVA_CLIENT_SECRET = os.environ.get('STRAVA_CLIENT_SECRET')
-REDIRECT_URI = os.environ.get('REDIRECT_URI')
+####################################################################################
+# Strava API configuration
+##########################################################################################
+STRAVA_CLIENT_ID = os.getenv('STRAVA_CLIENT_ID')
+STRAVA_CLIENT_SECRET = os.getenv('STRAVA_CLIENT_SECRET')
+STRAVA_PORT = int(os.getenv('FLASK_PORT', '3000'))
+STRAVA_REDIRECT_URI = f'http://localhost:{STRAVA_PORT}/callback'
 
-def exchange_token(code):
-    strava_request = requests.post(
-        'https://www.strava.com/oauth/token',
-        data={
+
+class StravaAPI:
+    def __init__(self):
+        self.base_url = 'https://www.strava.com/api/v3'
+
+    def get_auth_url(self):
+        """Generate Strava OAuth authorization URL"""
+        return (f"https://www.strava.com/oauth/authorize?"
+                f"client_id={STRAVA_CLIENT_ID}&"
+                f"redirect_uri={STRAVA_REDIRECT_URI}&"
+                f"response_type=code&"
+                f"scope=read,activity:read")
+
+    def exchange_code_for_token(self, code):
+        """Exchange authorization code for access token"""
+        token_url = 'https://www.strava.com/oauth/token'
+        data = {
             'client_id': STRAVA_CLIENT_ID,
             'client_secret': STRAVA_CLIENT_SECRET,
             'code': code,
             'grant_type': 'authorization_code'
         }
-    )
-    return jsonify(strava_request.json())
 
-@app.route('/strava_authorize', methods=['GET'])
-def strava_authorize():
-    params = {
-        'client_id': STRAVA_CLIENT_ID,
-        'redirect_uri': REDIRECT_URI,
-        'response_type': 'code',
-        'scope': 'activity:read_all'
-    }
-    return redirect('{}?{}'.format(
-        'https://www.strava.com/oauth/authorize',
-        urllib.parse.urlencode(params)
-    ))
+        response = requests.post(token_url, data=data)
+        return response.json()
 
-@app.route('/strava_token', methods=['GET'])
-def strava_token():
-    code = request.args.get('code')
-    if not code:
-        return Response('Error: Missing code param', status=400)
-    return exchange_token(code)
+    def get_activities(self, access_token, start_date, end_date, per_page=200):
+        """Fetch activities from Strava API"""
+        headers = {'Authorization': f'Bearer {access_token}'}
 
+        # Convert dates to Unix timestamps
+        start_timestamp = int(start_date.timestamp())
+        end_timestamp = int(end_date.timestamp())
+
+        print(
+            f"DEBUG: Fetching activities from {start_date} (timestamp: {start_timestamp}) to {end_date} (timestamp: {end_timestamp})")
+
+        activities = []
+        page = 1
+
+        while True:
+            params = {
+                'after': start_timestamp,
+                'before': end_timestamp,
+                'per_page': per_page,
+                'page': page
+            }
+
+            response = requests.get(f'{self.base_url}/athlete/activities',
+                                    headers=headers, params=params)
+
+            if response.status_code != 200:
+                break
+
+            page_activities = response.json()
+            if not page_activities:
+                break
+
+            activities.extend(page_activities)
+            page += 1
+
+            # Strava API rate limit protection
+            if len(page_activities) < per_page:
+                break
+
+        print(f"DEBUG: Fetched {len(activities)} activities")
+        if activities:
+            print(f"DEBUG: First activity date: {activities[0].get('start_date_local')}")
+            print(f"DEBUG: Last activity date: {activities[-1].get('start_date_local')}")
+
+        return activities
+
+
+strava_api = StravaAPI()
 
 ########################################################################################################################
 #page appelée à l'url : http://localhost:5000/A propos
@@ -69,36 +114,6 @@ def A_propos():
 ###########################################
 @app.route('/ConsultationResultat', methods=["GET", "POST"])
 def ConsultationResultat():
-    result = request.args
-    DateTimeMin = result.get('DateTimeMin') or '2026-01-07 00:00'
-    DateTimeMax = result.get('DateTimeMax') or '2026-01-12 23:59'
-    show_temp = 'Temperature' in result
-    show_press = 'Pression' in result
-    show_hum = 'Hygrometrie' in result
-
-    conn = sqlite3.connect(DB_name)
-    cursor = conn.cursor()
-
-    columns = []
-    columns.append("DateTime")
-    if show_temp:
-        columns.append("Temperature [°C]")
-    if show_press:
-        columns.append("Pression [hPa]")
-    if show_hum:
-        columns.append("Hygrometrie [%]")
-
-    column_str = ", ".join(columns)
-
-    requete = f"""
-    SELECT {column_str}
-    FROM Mesures
-    WHERE datetime(DateTime) BETWEEN datetime(?) AND datetime(?) 
-    ORDER BY DateTime;
-    """
-
-    res = cursor.execute(requete, (DateTimeMin, DateTimeMax))
-    mesures = res.fetchall()
 
     str_mapage = """
 <!DOCTYPE html>
@@ -122,26 +137,11 @@ def ConsultationResultat():
         <table border='1' class="fl-table">
 """
 
-    for col in columns:
-        str_mapage += f"<th>{col}</th>"
-    str_mapage += "</tr>"
-
-    """"""
-
-    for row in mesures:
-        str_mapage += "<tr>"
-        for value in row:
-            str_mapage += f"<td>{value}</td>"
-        str_mapage += "</tr>"
     str_mapage = str_mapage + """
     
     </div></table> """
-    query_string = request.query_string.decode()
     str_mapage += f""" 
-    <div id="footer-buttons"> 
-        <a href="/download_csv?{query_string}" class="buttonClass">⬇ Exporter les données (format .csv)</a> 
-        <a href="#top" class="buttonClass">↑ Retourner en haut de la table</a> 
-    </div> 
+
     <div id="bottom"></div>
     </body></html>
 """
@@ -151,11 +151,6 @@ def ConsultationResultat():
 #page appelée à l'url : http://localhost:5000/Consultation
 @app.route('/Consultation')
 def Consultation():
-    conn = sqlite3.connect(DB_name)
-    cursor = conn.cursor()
-    cursor.execute('SELECT IdMesure, DateTime FROM Mesures;')
-    mesures = cursor.fetchall()
-    conn.close()
 
     return render_template('stravaForm.html')
 
