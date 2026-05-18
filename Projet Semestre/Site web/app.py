@@ -1,8 +1,8 @@
-from flask import Flask, render_template, request, Response, redirect
+from flask import Flask, render_template, request, Response, redirect, jsonify
+import psycopg2
 import sqlite3
 import os
 import urllib.parse
-from flask import Flask, request, Response, jsonify, redirect
 from flask_cors import CORS
 import requests
 
@@ -12,8 +12,11 @@ app = Flask(__name__,
             template_folder='templates')
 
 
-DB_name = 'datas/data.db'
-
+try:
+    conn = psycopg2.connect("dbname='data' user='postgres' host='localhost' password='postgres'")
+    cursor = conn.cursor()
+except:
+    print("I am unable to connect to the database")
 
 
 app = Flask(__name__)
@@ -162,6 +165,27 @@ def Consultation():
 @app.route('/')
 def index():
     return render_template('index.html')
+
+########################################################################################################################
+#page appelée à l'url : http://localhost:5000/statistiques
+@app.route('/statistiques')
+def carte():
+    str_mapage = """
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8">
+<link rel="stylesheet" type="text/css" href="/css/style.css">
+<title>Données météo</title>
+</head>
+<body>
+<h1>Statistiques</h1>
+<div id="map"></div>"""
+
+
+
+
+    str_mapage += """</body></html>"""
+    return str_mapage
+
 
 ########################################################################################################################
 #lancé au démarrage de l'application
